@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html lang="en-us">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <title>ChooChoo Train</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+    
+    
+
+  <!-- Added Moment JS -->
+  <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>  
+
+</head>
+
+<body>
+    
+
+    <div class="container">
+        <div class="jumbotron" style="background-color: rgb(73, 72, 72); color: white">
+            <h1 class="text-center">Choo Choo Train</h1>
+            <h3 class="text-center">An extraordinary journey to Firebase and back in a Moment.js!</h3>
+        </div>
+        <h2>Current train schedule</h2>
+                    
+        <table class="table" id="data-table">
+            <thead>
+            <tr>
+                <th>Train Name</th>
+                <th>Destination</th>
+                <th>Frequency (min)</th>
+                <th>Next Arrival</th>
+                <th>Minutes Away</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <h2>Add train</h2>
+        <form>
+            <div class="form-group">
+                <label for="train">Train Name</label>
+                <input type="text" class="form-control" id="trainInput">
+            </div>
+            <div class="form-group">
+                <label for="destination">Destination</label>
+                <input type="text" class="form-control" id="destinationInput">
+            </div>
+            <div class="form-group">
+                <label for="time">First Train Name (HH:mm military time)</label>
+                <input type="text" class="form-control" id="timeInput" >
+            </div>
+            <div class="form-group">
+                <label for="frequency">Frequency (minutes)</label>
+                <input type="text" class="form-control" id="frequencyInput">
+            </div>
+            <button type="submit" id="add-data" class="submit">Submit</button>
+        </form>
+    </div>      
+
+    <script>
+        var config = {
+            apiKey: "AIzaSyCjXrTtumSoj5d2hZdKaEiEefOYq7McMag",
+            authDomain: "fir-project-3557c.firebaseapp.com",
+            databaseURL: "https://fir-project-3557c.firebaseio.com",
+            projectId: "fir-project-3557c",
+            storageBucket: "fir-project-3557c.appspot.com",
+            messagingSenderId: "1035302059806"
+        };
+
+        firebase.initializeApp(config);
+
+        var dataRef = firebase.database();
+
+        // Initial Values
+        var trainName = "";
+        var destination = "";
+        var frequency = 0;
+        var startTime = 0;
+
+        // Capture Button Click
+        $("#add-data").on("click", function(event) {
+        event.preventDefault();
+
+        trainName = $("#trainInput").val().trim();
+        destination = $("#destinationInput").val().trim();
+        frequency = $("#frequencyInput").val().trim();
+        startTime = $("#timeInput").val().trim();
+
+        // Code for the push
+        dataRef.ref().push({
+
+            trainName: trainName,
+            destination: destination,
+            frequency: frequency,
+            time: startTime,
+            dateAdded: firebase.database.ServerValue.TIMESTAMP
+          });
+        });
+
+        // Firebase watcher + initial loader HINT: This code behaves similarly to .on("value")
+        dataRef.ref().on("child_added", function(childSnapshot) {
+
+        // Log everything that's coming out of snapshot
+        console.log(childSnapshot.val().trainName);
+        console.log(childSnapshot.val().destination);
+        console.log(childSnapshot.val().frequency);
+
+        var firstTime = "00:00";
+
+        // First Time (pushed back 1 year to make sure it comes before current time)
+        var firstTimeConverted = moment(firstTime, "hh:mm").subtract(1, "days");
+        console.log(firstTimeConverted);  
+
+        // Current Time
+        var currentTime = moment();
+        console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
+
+        // Difference between the times
+        var diffTime = currentTime.diff(moment(firstTimeConverted), "minutes");
+        console.log("DIFFERENCE IN TIME: " + diffTime);
+
+        // Time apart (remainder)
+        var tRemainder = diffTime % frequency;
+        console.log(tRemainder);
+
+        // Minute Until Train
+        var tMinutesTillTrain = frequency - tRemainder;
+        console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
+
+        var nextTrain = moment().add(tMinutesTillTrain, "minutes");
+        console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
+
+        $("#data-table > tbody").prepend("<tr><td>" + trainName + "</td><td>" + destination + "</td><td>" +
+        frequency + "</td><td>" + nextTrain.format("hh:mm") + "</td><td>" + tMinutesTillTrain + "</td></tr>");
+
+        // Handle the errors
+        }, function(errorObject) {
+        console.log("Errors handled: " + errorObject.code);
+        });
+
+    </script>
+
+</body>
+
+</html>
