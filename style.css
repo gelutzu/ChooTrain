@@ -4,5 +4,8 @@
     margin: 50px;
 }
 .jumbotron {
-  
+  background-image: url(train.jpg);
+  background-repeat: no-repeat, repeat;
+  background-size: cover;
+  height: 350px;
 }

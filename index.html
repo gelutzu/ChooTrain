@@ -22,13 +22,13 @@
 </head>
 
 <body>
-    
 
     <div class="container">
-        <div class="jumbotron" style="background-color: rgb(73, 72, 72); color: white">
-            <h1 class="text-center">Choo Choo Train</h1>
-            <h3 class="text-center">An extraordinary journey to Firebase and back in a Moment.js!</h3>
-        </div>
+    
+        <h1 class="text-center">Choo Choo Train</h1>
+        <h3 class="text-center">An extraordinary journey to Firebase and back in a Moment.js!</h3>
+        <div class="jumbotron" style="background-color: rgb(73, 72, 72); color: white"></div>
+
         <h2>Current train schedule</h2>
                     
         <table class="table" id="data-table">
@@ -56,7 +56,7 @@
                 <input type="text" class="form-control" id="destinationInput">
             </div>
             <div class="form-group">
-                <label for="time">First Train Name (HH:mm military time)</label>
+                <label for="time">First Train Time (HH:mm military time)</label>
                 <input type="text" class="form-control" id="timeInput" >
             </div>
             <div class="form-group">
@@ -102,7 +102,7 @@
             trainName: trainName,
             destination: destination,
             frequency: frequency,
-            time: startTime,
+            startTime: startTime,
             dateAdded: firebase.database.ServerValue.TIMESTAMP
           });
         });
@@ -115,33 +115,38 @@
         console.log(childSnapshot.val().destination);
         console.log(childSnapshot.val().frequency);
 
-        var firstTime = "00:00";
+        var firstTime = "01:00";
+        
 
-        // First Time (pushed back 1 year to make sure it comes before current time)
-        var firstTimeConverted = moment(firstTime, "hh:mm").subtract(1, "days");
-        console.log(firstTimeConverted);  
+        // First Time (pushed back 1 day to make sure it comes before current time)
+        var firstTimeConverted = moment(firstTime, "HH:mm").subtract(1, "days");
+        console.log(firstTimeConverted);
+        console.log("One day ago 01:00 " + moment(firstTimeConverted._d).format("HH:mm"));  
 
         // Current Time
         var currentTime = moment();
-        console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
+        console.log("CURRENT TIME: " + moment(currentTime).format("HH:mm"));
 
         // Difference between the times
-        var diffTime = currentTime.diff(moment(firstTimeConverted), "minutes");
+        var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
         console.log("DIFFERENCE IN TIME: " + diffTime);
+
 
         // Time apart (remainder)
         var tRemainder = diffTime % frequency;
+        console.log(frequency);
         console.log(tRemainder);
+        
 
         // Minute Until Train
         var tMinutesTillTrain = frequency - tRemainder;
         console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
 
         var nextTrain = moment().add(tMinutesTillTrain, "minutes");
-        console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
+        console.log("ARRIVAL TIME: " + moment(nextTrain).format("HH:mm"));
 
         $("#data-table > tbody").prepend("<tr><td>" + trainName + "</td><td>" + destination + "</td><td>" +
-        frequency + "</td><td>" + nextTrain.format("hh:mm") + "</td><td>" + tMinutesTillTrain + "</td></tr>");
+        frequency + "</td><td>" + nextTrain.format("HH:mm") + "</td><td>" + tMinutesTillTrain + "</td></tr>");
 
         // Handle the errors
         }, function(errorObject) {
